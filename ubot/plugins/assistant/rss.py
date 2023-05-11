@@ -317,4 +317,4 @@ async def ars(client, message):
 
         await asyncio.gather(*tasks)
         #print(last_checked_time_g)
-        await asyncio.sleep(300)
+        await asyncio.sleep(60)
