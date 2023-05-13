@@ -98,7 +98,8 @@ async def r34(client, message):
                         f.write(response.content)
 
                     url = x['source']
-                    value = f"<a href='{url}'>Sauce</a>"
+                    value = f"[Sauce]({url})"
+                    #value = f"<a href='{url}'>Sauce</a>"
                     capy = value + "\n" + rule[2]
 
                     if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
