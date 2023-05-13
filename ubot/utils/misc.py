@@ -187,8 +187,8 @@ async def upload_from_queue(queue):
     while True:
         if not queue.empty():
             task = await queue.get()
-            file_path, chat_id, capy, ext_, x = task
-            await upload_file(file_path, chat_id, capy, ext_, x)
+            client, file_path, chat_id, capy, ext_, x = task
+            await upload_file(client, file_path, chat_id, capy, ext_, x)
             queue.task_done()
         await asyncio.sleep(1)
 
