@@ -50,4 +50,15 @@ if Config.bot_token:
 else:
     bot = None
 
+if Config.bot_token2:
+    bot2 = Client(
+        "assistant2",
+        api_id=Config.api_id,
+        api_hash=Config.api_hash,
+        bot_token=Config.bot_token2,
+        sleep_threshold=180,
+    )
+else:
+    bot2 = None
+
 Mclient = MongoClient(Config.mongodb)
