@@ -11,7 +11,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 from ubot import app, bot, Mclient
-from ubot.utils.misc import resizer, is_chat
+from ubot.utils.misc import resizer#, # is_chat
 from ubot.utils.san import Bruteforce
 from pymongo import ASCENDING, DESCENDING
 
@@ -23,6 +23,24 @@ if not os.path.exists(temp):
 
 @bot.on_message(filters.command(["r34"], prefixes=[".","/"]) & filters.incoming)
 async def r34(client, message):
+
+    async def is_chat(item):
+        try:
+            chat_id = int(item)
+            try:
+                chat = await app.get_chat(chat_id)
+            except:
+                return None
+            chat_id = chat.id
+        except ValueError:
+            if not item.startswith("@"):
+                return None
+            try:
+                chat = await app.get_chat(item)
+            except:
+                return None
+            chat_id = chat.id
+        return chat_id
     def get_rule():
         rule = []
         rule.append(["honkai%3a_star_rail", "-1001655727761"]) #leeching group
@@ -67,11 +85,12 @@ async def r34(client, message):
         #if chatid == None:
         #    print(f"error chat id {chatid}")
         #    return
-        
+
+        print(rule[1])
         chatid = await is_chat(rule[1])
         if chatid is None:
             print(f"error chat id {chatid}")
-            return 
+            return
 
         items = collection.find().sort([("$natural", DESCENDING)])
 
