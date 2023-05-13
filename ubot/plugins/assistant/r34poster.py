@@ -57,7 +57,7 @@ async def r34(client, message):
         var = 0
         post = []
         while var <= math.ceil(int(count) / 100):
-            x_rule = f"{api_rule_url}{var}"
+            x_rule = f"{api_rule_url}{rule[0]}&pid={var}"
             soup = BeautifulSoup(requests.get(x_rule).content, "lxml-xml")
             for x in soup.posts:
                 if x == '\n':
