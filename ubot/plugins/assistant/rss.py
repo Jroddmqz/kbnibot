@@ -9,7 +9,7 @@ from pyrogram import filters
 from datetime import datetime
 from dateutil.parser import parse
 from ubot import app, bot, Mclient
-from ubot.utils.misc import resizer
+from ubot.utils.misc import resizer, is_chat
 from ubot.utils.san import Bruteforce
 
 
@@ -36,24 +36,6 @@ last_checked_time_g = w
 
 @bot.on_message(filters.command(["rss"], prefixes=[".","/"]) & filters.incoming)
 async def ars(client, message):
-    async def is_chat(item):
-        try:
-            chat_id = int(item)
-            try:
-                chat = await app.get_chat(chat_id)
-            except:
-                return None
-            chat_id = chat.id
-        except ValueError:
-            if not item.startswith("@"):
-                return None
-            try:
-                chat = await app.get_chat(item)
-            except:
-                return None
-            chat_id = chat.id
-        return chat_id
-
 
     async def get_feed_entries_ranked(url):
         entries =[]
@@ -127,11 +109,11 @@ async def ars(client, message):
             if x[0] != url:
                 var += 1
             else:
-                chatid = await is_chat(x[1])
+                _chat_id = await is_chat(app, x[1])
                 var = var
-                collection = db[f'{chatid}']
+                collection = db[f'{_chat_id}']
                 break
-        if chatid == None:
+        if _chat_id == None:
             print("error")
             return
 
@@ -181,12 +163,12 @@ async def ars(client, message):
                 if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
                     new_file = resizer(f"{temp}{filename}")
                     try:
-                        await bot.send_photo(chatid, photo=new_file, caption=entry['title'])
+                        await bot.send_photo(_chat_id, photo=new_file, caption=entry['title'])
                         await asyncio.sleep(1)
-                        await bot.send_document(chatid, document=f"{temp}{filename}")
+                        await bot.send_document(_chat_id, document=f"{temp}{filename}")
                     except:
                         try:
-                            await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                            await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -194,17 +176,17 @@ async def ars(client, message):
                         os.remove(new_file)
                 elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
                     try:
-                        await bot.send_video(chatid, video=f"{temp}{filename}", caption=entry['title'])
+                        await bot.send_video(_chat_id, video=f"{temp}{filename}", caption=entry['title'])
                         await asyncio.sleep(1)
-                        await bot.send_document(chatid, document=f"{temp}{filename}")
+                        await bot.send_document(_chat_id, document=f"{temp}{filename}")
                     except:
                         try:
-                            await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                            await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
                 else:
                     try:
-                        await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                        await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
                     except Exception as e:
                         logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
