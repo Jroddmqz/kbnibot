@@ -4,12 +4,11 @@ import pathlib
 
 import cv2
 import imageio
+import requests
 from PIL import Image
+from bs4 import BeautifulSoup
 from moviepy.video.io.VideoFileClip import VideoFileClip
 import asyncio
-
-from pymongo import collection
-
 from ubot import app, bot, Mclient
 import logging
 
@@ -192,3 +191,51 @@ async def upload_from_queue(queue):
             await upload_file(file_path, chat_id, capy, ext_, x)
             queue.task_done()
         await asyncio.sleep(1)
+
+
+async def get_tags_rule34xxx(_id_):
+    url = f"https://rule34.xxx/index.php?page=post&s=view&id={_id_}"
+    headers = {
+        "User-Agent": "Mi Agente de Usuario Personalizado",
+        "Accept-Language": "es-ES,es;q=0.9,en;q=0.8"
+    }
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.content, "html.parser")
+
+        c = soup.find_all("li", class_="tag-type-character tag")
+        character_ = []
+        for li in c:
+            a_tag = li.find_all_next("a", href=True)
+            character_.append(a_tag[1].text)
+
+        q = soup.find_all("li", class_="tag-type-copyright tag")
+        copyright_ = []
+        for li in q:
+            a_tag = li.find_all_next("a", href=True)
+            copyright_.append(a_tag[1].text)
+
+        a = soup.find_all("li", class_="tag-type-artist tag")
+        artist_ = []
+        for li in a:
+            a_tag = li.find_all_next("a", href=True)
+            artist_.append(a_tag[1].text)
+    else:
+        print("Error al hacer la solicitud:", response.status_code)
+
+    char_txt = ""
+    for x in character_:
+        char_txt = f"{char_txt} {x} "
+
+    brand_txt = ""
+    for x in copyright_:
+        brand_txt = f"{brand_txt} {x} "
+
+    artist_txt = ""
+    for x in artist_:
+        artist_txt = f"{artist_txt} {x} "
+
+    txt = f"CHAR: {char_txt}\nBRAND: {brand_txt}\nARTIST: {artist_txt}"
+
+    return txt
