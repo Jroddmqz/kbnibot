@@ -105,12 +105,12 @@ async def r34(client, message):
                     if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
                         new_file = resizer(f"{temp}{filename}")
                         try:
-                            sended = await bot.send_photo(chatid, photo=new_file, caption=str(capy))
+                            sended = await app.send_photo(chatid, photo=new_file, caption=str(capy))
                             await asyncio.sleep(1)
-                            await bot.send_document(chatid, document=f"{temp}{filename}")
+                            await app.send_document(chatid, document=f"{temp}{filename}")
                         except:
                             try:
-                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
+                                sended = await app.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                             except Exception as e:
                                 logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -118,17 +118,17 @@ async def r34(client, message):
                             os.remove(new_file)
                     elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
                         try:
-                            sended = await bot.send_video(chatid, video=f"{temp}{filename}", caption=str(capy))
+                            sended = await app.send_video(chatid, video=f"{temp}{filename}", caption=str(capy))
                             await asyncio.sleep(1)
-                            await bot.send_document(chatid, document=f"{temp}{filename}")
+                            await app.send_document(chatid, document=f"{temp}{filename}")
                         except:
                             try:
-                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
+                                sended = await app.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                             except Exception as e:
                                 logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
                     else:
                         try:
-                            sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
+                            sended = await app.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
