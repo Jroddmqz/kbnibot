@@ -41,10 +41,10 @@ async def r34(client, message):
                 return None
             chat_id = chat.id
         return chat_id
-    def get_rule():
+    async def get_rule():
         rule = []
-        rule.append(["honkai:_star_rail", "-1001655727761", "@star_rail"]) #leeching group
-        rule.append(["genshin_impact", "-1001655727761", "@gensin_impact"])
+        rule.append(["honkai:_star_rail", "-1001407356398", "😈 https://t.me/+4wqeR0dRySJlMDUx"]) #leeching group
+        rule.append(["genshin_impact", "-1001629528057", "😈 https://t.me/+45f-VAxVB2NjN2Jh"])
         #url.append(["", ""])
         return rule
 
@@ -96,8 +96,10 @@ async def r34(client, message):
 
                     with open(os.path.join(temp, filename), "wb") as f:
                         f.write(response.content)
-                    value = f"{x['source']}"
-                    capy = value + rule[2]
+
+                    url = x['source']
+                    value = f"<a href='{url}'>Sauce</a>"
+                    capy = value + "\n" + rule[2]
 
                     if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
                         new_file = resizer(f"{temp}{filename}")
@@ -142,7 +144,7 @@ async def r34(client, message):
 
 
     db = Mclient["rule"]
-    ruler = get_rule()
+    ruler = await get_rule()
     while True:
         tasks = [asyncio.create_task(process(rule)) for rule in ruler]
 
