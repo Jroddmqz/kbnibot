@@ -43,8 +43,8 @@ async def r34(client, message):
         return chat_id
     def get_rule():
         rule = []
-        rule.append(["honkai%3a_star_rail", "-1001655727761"]) #leeching group
-        rule.append(["genshin_impact", "-1001655727761"])
+        rule.append(["honkai:_star_rail", "-1001655727761", "@star_rail"]) #leeching group
+        rule.append(["genshin_impact", "-1001655727761", "@gensin_impact"])
         #url.append(["", ""])
         return rule
 
@@ -64,6 +64,7 @@ async def r34(client, message):
                     continue
                 post.append(x)
             var += 1
+            await asyncio.sleep(1)
 
         collection = db[f'{rule[0]}']
 
@@ -73,24 +74,12 @@ async def r34(client, message):
             if not exist:
                 collection.insert_one(item)
 
-        #chats = get_rule()
-        #var = 0
-        #for x in chats:
-        #    if x[0] != rule:
-        #        var += 1
-        #    else:
-        #        chatid = await is_chat(x[1])
-        #        var = var
-        #        break
-        #if chatid == None:
-        #    print(f"error chat id {chatid}")
-        #    return
-
-        print(rule[1])
         chatid = await is_chat(rule[1])
         if chatid is None:
             print(f"error chat id {chatid}")
             return
+
+        print(f"{rule[0]} --- {count}items --- Posting to{chatid}")
 
         items = collection.find().sort([("$natural", DESCENDING)])
 
@@ -108,17 +97,17 @@ async def r34(client, message):
                     with open(os.path.join(temp, filename), "wb") as f:
                         f.write(response.content)
                     value = f"{x['source']}"
-                    capy = await bot.get_chat_invite_link(chatid) + "\n" + value
+                    capy = value + rule[2]
 
                     if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
                         new_file = resizer(f"{temp}{filename}")
                         try:
-                            sended = await bot.send_photo(chatid, photo=new_file, caption=capy)
+                            sended = await bot.send_photo(chatid, photo=new_file, caption=str(capy))
                             await asyncio.sleep(1)
                             await bot.send_document(chatid, document=f"{temp}{filename}")
                         except:
                             try:
-                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=capy)
+                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                             except Exception as e:
                                 logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -126,17 +115,17 @@ async def r34(client, message):
                             os.remove(new_file)
                     elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
                         try:
-                            sended = await bot.send_video(chatid, video=f"{temp}{filename}", caption=capy)
+                            sended = await bot.send_video(chatid, video=f"{temp}{filename}", caption=str(capy))
                             await asyncio.sleep(1)
                             await bot.send_document(chatid, document=f"{temp}{filename}")
                         except:
                             try:
-                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=capy)
+                                sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                             except Exception as e:
                                 logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
                     else:
                         try:
-                            sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=capy)
+                            sended = await bot.send_document(chatid, document=f"{temp}{filename}", caption=str(capy))
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -160,5 +149,3 @@ async def r34(client, message):
         await asyncio.gather(*tasks)
         #print(last_checked_time_g)
         await asyncio.sleep(86400)
-
-
