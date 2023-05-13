@@ -166,7 +166,7 @@ async def ars(client, message):
             elif 'yande.re' in entry['link']:
                 archive = b.booru(entry['link'], site='yandere')
             else:
-                archive = ""
+                continue
 
             response = requests.get(archive)
             if response.status_code == 200:
@@ -181,12 +181,12 @@ async def ars(client, message):
                 if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
                     new_file = resizer(f"{temp}{filename}")
                     try:
-                        await app.send_photo(chatid, photo=new_file, caption=entry['title'])
+                        await bot.send_photo(chatid, photo=new_file, caption=entry['title'])
                         await asyncio.sleep(1)
-                        await app.send_document(chatid, document=f"{temp}{filename}")
+                        await bot.send_document(chatid, document=f"{temp}{filename}")
                     except:
                         try:
-                            await app.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                            await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -194,17 +194,17 @@ async def ars(client, message):
                         os.remove(new_file)
                 elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
                     try:
-                        await app.send_video(chatid, video=f"{temp}{filename}", caption=entry['title'])
+                        await bot.send_video(chatid, video=f"{temp}{filename}", caption=entry['title'])
                         await asyncio.sleep(1)
-                        await app.send_document(chatid, document=f"{temp}{filename}")
+                        await bot.send_document(chatid, document=f"{temp}{filename}")
                     except:
                         try:
-                            await app.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                            await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
                 else:
                     try:
-                        await app.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
+                        await bot.send_document(chatid, document=f"{temp}{filename}", caption=entry['title'])
                     except Exception as e:
                         logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
 
@@ -224,4 +224,4 @@ async def ars(client, message):
 
         await asyncio.gather(*tasks)
         #print(last_checked_time_g)
-        await asyncio.sleep(300)
+        await asyncio.sleep(60)
