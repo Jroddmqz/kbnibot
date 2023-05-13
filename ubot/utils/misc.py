@@ -6,11 +6,17 @@ import cv2
 import imageio
 from PIL import Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
+import asyncio
+
+from pymongo import collection
+
+from ubot import app, bot, Mclient
+import logging
 
 
 def item_for_search():
     let_ = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q',
-              'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+            'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
     num_ = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
     # Crear todas las combinaciones posibles de profundidad 2
@@ -44,6 +50,7 @@ def file_list(path, sett):
             sett.add(str(filepath.parent) + "/" + str(filepath.name))
     return sett
 
+
 def resizer(_image_):
     with Image.open(_image_) as img:
         width, height = img.size
@@ -60,14 +67,14 @@ def resizer(_image_):
         resized_img = img
 
     path_, ext_ = os.path.splitext(_image_)
-    newname = path_+"lite"+ext_
+    newname = path_ + "lite" + ext_
     resized_img.save(newname)
     return newname
 
 
 def thumbail_(_video_):
     path_, ext_ = os.path.splitext(_video_)
-    namethumb = path_+".jpg"
+    namethumb = path_ + ".jpg"
     if ext_.lower() == ".mp4":
         # Abrir el video
         cap = cv2.VideoCapture(_video_)
@@ -102,7 +109,7 @@ def thumbail_(_video_):
             # thumbnail.save_frame(newname)
             # np.savetxt('thumbnail.jpg', thumbnail)
             imageio.imwrite(namethumb, thumbnail)
-            video.write_videofile(path_+".mp4")
+            video.write_videofile(path_ + ".mp4")
             # Liberar los recursos
             video.close()
             print("El archivo MOV parece estar bien.")
@@ -112,11 +119,11 @@ def thumbail_(_video_):
     return namethumb
 
 
-async def is_chat(item):
+async def is_chat(client, item):
     try:
         chat_id = int(item)
         try:
-            chat = await app.get_chat(chat_id)
+            chat = await client.get_chat(chat_id)
         except:
             return None
         chat_id = chat.id
@@ -124,8 +131,64 @@ async def is_chat(item):
         if not item.startswith("@"):
             return None
         try:
-            chat = await app.get_chat(item)
+            chat = await client.get_chat(item)
         except:
             return None
         chat_id = chat.id
     return chat_id
+
+
+async def upload_file(client, file_path, chat_id, capy, ext_, x_item=False):
+    print(f"{x_item['file_url']} -- {file_path}")
+    if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
+        new_file = resizer(file_path)
+        try:
+            sended = await client.send_photo(chat_id, photo=new_file, caption=str(capy))
+            print("sended")
+            await asyncio.sleep(1)
+            await client.send_document(chat_id, document=file_path)
+        except:
+            try:
+                sended = await client.send_document(chat_id, document=file_path, caption=str(capy))
+            except Exception as e:
+                logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+        if os.path.exists(new_file):
+            os.remove(new_file)
+    elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
+        try:
+            sended = await client.send_video(chat_id, video=file_path, caption=str(capy))
+            await asyncio.sleep(1)
+            await client.send_document(chat_id, document=file_path)
+        except:
+            try:
+                sended = await client.send_document(chat_id, document=file_path, caption=str(capy))
+            except Exception as e:
+                logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+    else:
+        try:
+            sended = await client.send_document(chat_id, document=file_path, caption=str(capy))
+        except Exception as e:
+            logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+
+    os.remove(file_path)
+
+    if x_item is None:
+        pass
+    else:
+        db = Mclient["rule"]
+        collect = db[f"{x_item['tag']}"]
+        if sended != None:
+            if not x_item['published']:
+                filter = {'id': x_item['id']}
+                update = {'$set': {'published': True}}
+                collect.update_one(filter, update)
+
+
+async def upload_from_queue(queue):
+    while True:
+        if not queue.empty():
+            task = await queue.get()
+            file_path, chat_id, capy, ext_, x = task
+            await upload_file(file_path, chat_id, capy, ext_, x)
+            queue.task_done()
+        await asyncio.sleep(1)
