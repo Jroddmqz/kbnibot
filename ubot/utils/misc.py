@@ -110,3 +110,22 @@ def thumbail_(_video_):
             print("El archivo MOV parece estar dañado.")
             return None
     return namethumb
+
+
+async def is_chat(item):
+    try:
+        chat_id = int(item)
+        try:
+            chat = await app.get_chat(chat_id)
+        except:
+            return None
+        chat_id = chat.id
+    except ValueError:
+        if not item.startswith("@"):
+            return None
+        try:
+            chat = await app.get_chat(item)
+        except:
+            return None
+        chat_id = chat.id
+    return chat_id
