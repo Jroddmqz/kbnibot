@@ -33,7 +33,7 @@ async def r34(client, message):
 
     async def process(rule):
         api_rule_url = "https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&tags="
-        soup = BeautifulSoup(requests.get(f"{api_rule_url}{rule}").content, "lxml-xml")
+        soup = BeautifulSoup(requests.get(f"{api_rule_url}{rule[0]}").content, "lxml-xml")
         count = soup.posts.attrs['count']
 
         var = 0
@@ -47,7 +47,7 @@ async def r34(client, message):
                 post.append(x)
             var += 1
 
-        collection = db[f'{rule}']
+        collection = db[f'{rule[0]}']
 
         for x in post:
             item = {"id": x.get('id'), "file_url": x.get('file_url'), "source": x.get('source'), "published": False}
@@ -55,18 +55,23 @@ async def r34(client, message):
             if not exist:
                 collection.insert_one(item)
 
-        chats = get_rule()
-        var = 0
-        for x in chats:
-            if x[0] != rule:
-                var += 1
-            else:
-                chatid = await is_chat(x[1])
-                var = var
-                break
-        if chatid == None:
-            print("error chat id")
-            return
+        #chats = get_rule()
+        #var = 0
+        #for x in chats:
+        #    if x[0] != rule:
+        #        var += 1
+        #    else:
+        #        chatid = await is_chat(x[1])
+        #        var = var
+        #        break
+        #if chatid == None:
+        #    print(f"error chat id {chatid}")
+        #    return
+        
+        chatid = await is_chat(rule[1])
+        if chatid is None:
+            print(f"error chat id {chatid}")
+            return 
 
         items = collection.find().sort([("$natural", DESCENDING)])
 
@@ -131,7 +136,7 @@ async def r34(client, message):
     db = Mclient["rule"]
     ruler = get_rule()
     while True:
-        tasks = [asyncio.create_task(process(rule[0])) for rule in ruler]
+        tasks = [asyncio.create_task(process(rule)) for rule in ruler]
 
         await asyncio.gather(*tasks)
         #print(last_checked_time_g)
