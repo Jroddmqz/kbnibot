@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import math
 import os
 import random
@@ -11,7 +12,7 @@ from pymongo import DESCENDING
 from pyrogram import filters
 
 from ubot import app, bot, bot2, Mclient
-from ubot.utils.misc import upload_from_queue, is_chat
+from ubot.utils.misc import upload_from_queue, is_chat, get_tags_rule34xxx
 
 if bot2:
     uploader = bot2
@@ -79,9 +80,20 @@ async def r34(client, message):
                     with open(os.path.join(temp, filename), "wb") as f:
                         f.write(response.content)
 
+                    txt = ""
+                    try:
+                        txt = await get_tags_rule34xxx(x['id'])
+                    except Exception as e:
+                        logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+
                     url = x['source']
-                    source = f"[source]({url})"
-                    capy = source + "\n" + rule[2]
+                    capy = f"""
+[✨ SAUCE ✨]({url})
+
+{txt}
+
+{rule[2]}
+"""
                     filepath = f"{temp}{filename}"
 
                     await queue.put((uploader, filepath, _chat_id, capy, ext_, x))
