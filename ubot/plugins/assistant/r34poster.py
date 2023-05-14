@@ -68,38 +68,49 @@ async def r34(client, message):
 
         items = collection.find().sort([("$natural", DESCENDING)])
 
+        bound = 0
+        
         for x in items:
-            if not x['published']: #if x['published'] == False:
-                archive = x['file_url']
-                response = requests.get(archive)
-                if response.status_code == 200:
-                    path_, ext_ = os.path.splitext(archive)
-                    now = datetime.now()
-                    date_time = now.strftime("%y%m%d_%H%M%S")
-                    random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=2))
-                    filename = f"{date_time}{random_chars}{ext_}"
-
-                    with open(os.path.join(temp, filename), "wb") as f:
-                        f.write(response.content)
-
-                    txt = ""
+            while bound < 100:
+                if not x['published']: #if x['published'] == False:
+                    bound +=1
+                    archive = x['file_url']
                     try:
-                        txt = await get_tags_rule34xxx(x['id'])
-                    except Exception as e:
-                        logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
-
-                    url = x['source']
-                    capy = f"""
+                        response = requests.get(archive)
+                    except:
+                        regi = f"Se omitio {x['file_url']} con el id {x['id']} , no se pudo descargar"
+                        await bot.send_message(log_group, regi)
+                        continue
+                    if response.status_code == 200:
+                        path_, ext_ = os.path.splitext(archive)
+                        now = datetime.now()
+                        date_time = now.strftime("%y%m%d_%H%M%S")
+                        random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=2))
+                        filename = f"{date_time}{random_chars}{ext_}"
+    
+                        with open(os.path.join(temp, filename), "wb") as f:
+                            f.write(response.content)
+    
+                        txt = ""
+                        try:
+                            txt = await get_tags_rule34xxx(x['id'])
+                        except Exception as e:
+                            logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+    
+                        url = x['source']
+                        capy = f"""
 [✨ SAUCE ✨]({url})
 
 {txt}
 
 {rule[2]}
 """
-                    filepath = f"{temp}{filename}"
-
-                    await queue.put((uploader, filepath, _chat_id, capy, ext_, x))
-
+                        filepath = f"{temp}{filename}"
+    
+                        await queue.put((uploader, filepath, _chat_id, capy, ext_, x))
+        
+        regi = "Se esta subiendo un bloque de 100 imagenes"                
+        await bot.send_message(log_group, regi)
         upload_task = asyncio.create_task(upload_from_queue(queue))
 
     queue = asyncio.Queue()
