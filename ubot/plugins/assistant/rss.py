@@ -8,7 +8,7 @@ import random, string
 from pyrogram import filters
 from datetime import datetime
 from dateutil.parser import parse
-from ubot import app, bot, Mclient
+from ubot import app, bot, Mclient, log_group
 from ubot.utils.misc import resizer, is_chat
 from ubot.utils.san import Bruteforce
 
@@ -130,10 +130,16 @@ async def ars(client, message):
                 if not exist:
                     collection.insert_one(item)
                     entries.append(x)
-            print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
+            if len(entries) > 0:
+                #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
+                regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked"
+                await bot.send_message(log_group, regi)
         else:
             entries, last_checked_time_g[var] = await get_recent_entries_async(url,last_checked_time_g[var])
-            print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}")
+            if len(entries) > 0:
+                #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}")
+                regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}"
+                await bot.send_message(log_group, regi)
 
         for entry in entries:
             #print(f"{entry['title']}: {entry['link']}")
@@ -155,8 +161,8 @@ async def ars(client, message):
                 #filename = os.path.basename(archive)
                 path_, ext_ = os.path.splitext(archive)
                 now = datetime.now()
-                date_time = now.strftime("%Y%m%d_%H%M%S")
-                random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=3))
+                date_time = now.strftime("%y%m%d_%H%M%S")
+                random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=2))
                 filename = f"{date_time}{random_chars}{ext_}"
                 with open(os.path.join(temp, filename), "wb") as f:
                     f.write(response.content)
@@ -189,21 +195,15 @@ async def ars(client, message):
                         await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
                     except Exception as e:
                         logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
-
                 os.remove(f"{temp}{filename}")
-
             else:
                 print("Error al descargar la imagen.")
-
 
     rss_urls = get_feed_url()
 
     db = Mclient["rss"]
 
-
     while True:
         tasks = [asyncio.create_task(process_rss(url[0])) for url in rss_urls]
-
         await asyncio.gather(*tasks)
-        #print(last_checked_time_g)
         await asyncio.sleep(60)
