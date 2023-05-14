@@ -24,6 +24,8 @@ if not os.path.exists(temp):
 
 @bot.on_message(filters.command(["r34"], prefixes=[".", "/"]) & filters.incoming)
 async def r34(client, message):
+    regi = "`Ejecutando r34, esto puede tardar algunos minutos`"
+    await bot.send_message(log_group, regi)
 
     async def get_rule():
         rule=[]
@@ -62,8 +64,7 @@ async def r34(client, message):
             print(f"error chat id {_chat_id}")
             return
 
-        #print(f"{rule[0]} --- {count}items --- Posting to{_chat_id}")
-        regi = f"{rule[0]} --- {count}items --- Posting to{_chat_id}"
+        regi = f"`{rule[0]} - {count}items - Posting to{_chat_id}`"
         await bot.send_message(log_group, regi)
 
         items = collection.find().sort([("$natural", DESCENDING)])
@@ -71,14 +72,14 @@ async def r34(client, message):
         bound = 0
 
         for x in items:
-            while bound < 100:
+            if bound < 100:
                 if not x['published']: #if x['published'] == False:
                     bound +=1
                     archive = x['file_url']
                     try:
                         response = requests.get(archive)
                     except:
-                        regi = f"Se omitio {x['file_url']} con el id {x['id']} , no se pudo descargar"
+                        regi = f"`Se omitio {x['file_url']} con el id {x['id']} , no se pudo descargar`"
                         await bot.send_message(log_group, regi)
                         continue
                     if response.status_code == 200:
@@ -108,10 +109,10 @@ async def r34(client, message):
                         filepath = f"{temp}{filename}"
 
                         await queue.put((uploader, filepath, _chat_id, capy, ext_, x))
-            if bound >= 100:
+            elif bound >= 100:
                 break
-                
-        regi = "Se esta subiendo un bloque de 100 imagenes"
+
+        regi = "`Se esta subiendo un bloque de 100 imagenes`"
         await bot.send_message(log_group, regi)
         upload_task = asyncio.create_task(upload_from_queue(queue))
 
@@ -121,6 +122,7 @@ async def r34(client, message):
 
     while True:
         tasks = [asyncio.create_task(process(rule)) for rule in ruler]
+        print("ejecute main")
         await asyncio.gather(*tasks)
         await queue.join()
         await asyncio.sleep(86400)
