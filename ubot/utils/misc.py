@@ -143,7 +143,6 @@ async def upload_file(client, file_path, chat_id, capy, ext_, x_item=False):
         new_file = resizer(file_path)
         try:
             sended = await client.send_photo(chat_id, photo=new_file, caption=str(capy))
-            print("sended")
             await asyncio.sleep(1)
             await client.send_document(chat_id, document=file_path)
         except:
