@@ -69,7 +69,7 @@ async def r34(client, message):
         items = collection.find().sort([("$natural", DESCENDING)])
 
         bound = 0
-        
+
         for x in items:
             while bound < 100:
                 if not x['published']: #if x['published'] == False:
@@ -87,16 +87,16 @@ async def r34(client, message):
                         date_time = now.strftime("%y%m%d_%H%M%S")
                         random_chars = ''.join(random.choices(string.ascii_letters + string.digits, k=2))
                         filename = f"{date_time}{random_chars}{ext_}"
-    
+
                         with open(os.path.join(temp, filename), "wb") as f:
                             f.write(response.content)
-    
+
                         txt = ""
                         try:
                             txt = await get_tags_rule34xxx(x['id'])
                         except Exception as e:
                             logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
-    
+
                         url = x['source']
                         capy = f"""
 [✨ SAUCE ✨]({url})
@@ -106,10 +106,12 @@ async def r34(client, message):
 {rule[2]}
 """
                         filepath = f"{temp}{filename}"
-    
+
                         await queue.put((uploader, filepath, _chat_id, capy, ext_, x))
-        
-        regi = "Se esta subiendo un bloque de 100 imagenes"                
+            if bound >= 100:
+                break
+                
+        regi = "Se esta subiendo un bloque de 100 imagenes"
         await bot.send_message(log_group, regi)
         upload_task = asyncio.create_task(upload_from_queue(queue))
 
