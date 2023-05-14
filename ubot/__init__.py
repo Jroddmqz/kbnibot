@@ -61,4 +61,7 @@ if Config.bot_token2:
 else:
     bot2 = None
 
+if Config.log_group:
+    log_group = Config.log_group
+
 Mclient = MongoClient(Config.mongodb)
