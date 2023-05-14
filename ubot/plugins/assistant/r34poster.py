@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup
 from pymongo import DESCENDING
 from pyrogram import filters
 
-from ubot import app, bot, bot2, Mclient
+from ubot import app, bot, bot2, Mclient, log_group
 from ubot.utils.misc import upload_from_queue, is_chat, get_tags_rule34xxx
 
 if bot2:
@@ -62,7 +62,9 @@ async def r34(client, message):
             print(f"error chat id {_chat_id}")
             return
 
-        print(f"{rule[0]} --- {count}items --- Posting to{_chat_id}")
+        #print(f"{rule[0]} --- {count}items --- Posting to{_chat_id}")
+        regi = f"{rule[0]} --- {count}items --- Posting to{_chat_id}"
+        await bot.send_message(log_group, regi)
 
         items = collection.find().sort([("$natural", DESCENDING)])
 
