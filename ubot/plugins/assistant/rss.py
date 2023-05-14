@@ -36,6 +36,8 @@ last_checked_time_g = w
 
 @bot.on_message(filters.command(["rss"], prefixes=[".","/"]) & filters.incoming)
 async def ars(client, message):
+    regi = "`Ejecutando rss, esto puede tardar algunos minutos`"
+    await bot.send_message(log_group, regi)
 
     async def get_feed_entries_ranked(url):
         entries =[]
