@@ -205,6 +205,6 @@ async def ars(client, message):
     db = Mclient["rss"]
 
     while True:
-        tasks = [asyncio.create_task(process_rss(url[0])) for url in rss_urls]
+        tasks = [asyncio.create_task(process_rss(url['rss_url'])) for url in rss_urls]
         await asyncio.gather(*tasks)
         await asyncio.sleep(60)
