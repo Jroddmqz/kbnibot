@@ -98,7 +98,7 @@ async def ars(client, message):
                 var += 1
             else:
                 _chat_id = await is_chat(app, n['channel'])
-                _caption_ = n['caption']
+                _caption_ = str(n['caption'])
                 var = var
                 collection = db[f'{_chat_id}']
                 break
@@ -165,7 +165,7 @@ async def ars(client, message):
                 with open(os.path.join(temp, filename), "wb") as f:
                     f.write(response.content)
                 file_path = f"{temp}{filename}"
-                capy = f"{entry['title']}\n{_caption_['caption']}"
+                capy = f"{entry['title']}\n{_caption_}"
 
                 await upload_file(bot, file_path, _chat_id, capy, ext_)
             else:
