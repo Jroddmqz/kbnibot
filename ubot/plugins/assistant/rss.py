@@ -12,7 +12,7 @@ from dateutil.parser import parse
 from pyrogram import filters
 
 from ubot import app, bot, Mclient, log_group
-from ubot.utils.misc import resizer, is_chat
+from ubot.utils.misc import resizer, is_chat, upload_file
 from ubot.utils.san import Bruteforce
 from input import rss
 
@@ -41,21 +41,26 @@ async def ars(client, message):
             order_rank = ""
 
         for entry in feed.entries:
-            entry_data = {
-                "title": entry.title,
-                "link": entry.link,
-                "updated": entry.updated,
-                "author": entry.author,
-                "order_rank": order_rank,
-            }
-            entries.append(entry_data)
+            try:
+                entry_data = {
+                    "title": entry.title,
+                    "link": entry.link,
+                    "updated": entry.updated,
+                    "author": entry.author,
+                    "order_rank": order_rank,
+                }
+                entries.append(entry_data)
+            except:
+                print("Error get feed entries ranked",entry)
+                pass
+
         return entries
 
     async def get_feed_entries(url):
         entries = []
         feed = feedparser.parse(url)
         for entry in feed.entries:
-            if "danbooru" in url:
+            try:
                 entry_data = {
                     "title": entry.title,
                     "link": entry.link,
@@ -63,22 +68,9 @@ async def ars(client, message):
                     "author": entry.author,
                 }
                 entries.append(entry_data)
-            elif "lolibooru" in url:
-                entry_data = {
-                    "title": entry.title,
-                    "link": entry.link,
-                    "updated": entry.updated,
-                    "author": entry.author,
-                }
-                entries.append(entry_data)
-            else:
-                entry_data = {
-                    "title": entry.title,
-                    "link": entry.link,
-                    "updated": entry.updated,
-                    "author": entry.author,
-                }
-                entries.append(entry_data)
+            except:
+                print("Error get feed entries ranked", entry)
+                pass
 
         return entries
 
@@ -98,13 +90,15 @@ async def ars(client, message):
 
     async def process_rss(url):
         _chat_id = None
+        _caption_ = ""
         chats = rss
         var = 0
-        for x in chats:
-            if x['rss_url'] != url:
+        for n in chats:
+            if n['rss_url'] != url:
                 var += 1
             else:
-                _chat_id = await is_chat(app, x['channel'])
+                _chat_id = await is_chat(app, n['channel'])
+                _caption_ = n['caption']
                 var = var
                 collection = db[f'{_chat_id}']
                 break
@@ -120,16 +114,20 @@ async def ars(client, message):
             entries = []
             entries_temp = await get_feed_entries_ranked(url)
             for x in entries_temp:
-                item = {"title": x['title'], "link": x['link'], "updated": x['updated'], "author": x['author'],
-                        "order": x['order_rank']}
-                exist = collection.find_one({"link": x["link"]})
-                if not exist:
-                    collection.insert_one(item)
-                    entries.append(x)
-            # if len(entries) > 0:
-            #    #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
-            #    regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked"
-            #    await bot.send_message(log_group, regi)
+                try:
+                    item = {"title": x['title'], "link": x['link'], "updated": x['updated'], "author": x['author'],
+                            "order": x['order_rank']}
+                    exist = collection.find_one({"link": x["link"]})
+                    if not exist:
+                        collection.insert_one(item)
+                        entries.append(x)
+                # if len(entries) > 0:
+                #    #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
+                #    regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked"
+                #    await bot.send_message(log_group, regi)
+                except Exception as e:
+                    logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+                    continue
         else:
             entries, last_checked_time_g[var] = await get_recent_entries_async(url, last_checked_time_g[var])
             # if len(entries) > 0:
@@ -166,36 +164,10 @@ async def ars(client, message):
                 filename = f"{date_time}{random_chars}{ext_}"
                 with open(os.path.join(temp, filename), "wb") as f:
                     f.write(response.content)
-                if ext_.lower() in {'.jpg', '.png', '.webp', '.jpeg'}:
-                    new_file = resizer(f"{temp}{filename}")
-                    try:
-                        await bot.send_photo(_chat_id, photo=new_file, caption=entry['title'])
-                        await asyncio.sleep(1)
-                        await bot.send_document(_chat_id, document=f"{temp}{filename}")
-                    except:
-                        try:
-                            await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
-                        except Exception as e:
-                            logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
+                file_path = f"{temp}{filename}"
+                capy = f"{entry['title']}\n{_caption_['caption']}"
 
-                    if os.path.exists(new_file):
-                        os.remove(new_file)
-                elif ext_.lower() in {'.mp4', '.avi', '.mkv', '.mov'}:
-                    try:
-                        await bot.send_video(_chat_id, video=f"{temp}{filename}", caption=entry['title'])
-                        await asyncio.sleep(1)
-                        await bot.send_document(_chat_id, document=f"{temp}{filename}")
-                    except:
-                        try:
-                            await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
-                        except Exception as e:
-                            logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
-                else:
-                    try:
-                        await bot.send_document(_chat_id, document=f"{temp}{filename}", caption=entry['title'])
-                    except Exception as e:
-                        logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
-                os.remove(f"{temp}{filename}")
+                await upload_file(bot, file_path, _chat_id, capy, ext_)
             else:
                 print("Error al descargar la imagen.")
 
