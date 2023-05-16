@@ -1,46 +1,39 @@
-import os
-import time
 import asyncio
 import logging
-import requests
-import feedparser
-import random, string
-from pyrogram import filters
+import os
+import random
+import string
+import time
 from datetime import datetime
+
+import feedparser
+import requests
 from dateutil.parser import parse
+from pyrogram import filters
+
 from ubot import app, bot, Mclient, log_group
 from ubot.utils.misc import resizer, is_chat
 from ubot.utils.san import Bruteforce
-
+from input import rss
 
 temp = '.temp/'
 if not os.path.exists(temp):
     os.makedirs(temp)
 
-
-def get_feed_url():
-    urls_ = []
-    urls_.append(["https://danbooru.donmai.us/posts.atom", "-1001655727761"])
-    urls_.append(["https://lolibooru.moe/post.atom", "-1001754747705"])
-    urls_.append(["https://siftrss.com/f/9Mn0Rq9QgG", "-1001616034175"]) #@nyastrixroom
-    urls_.append(["https://konachan.com/post/atom", "-1001850075721"]) #Konachan
-    urls_.append(["https://yande.re/post/atom?tags=", "@acgnxse"])
-    return urls_
-
 global last_checked_time_g
-w =[]
-for x in get_feed_url():
+w = []
+for x in rss:
     w.append(time.time())
 last_checked_time_g = w
 
 
-@bot.on_message(filters.command(["rss"], prefixes=[".","/"]) & filters.incoming)
+@bot.on_message(filters.command(["rss"], prefixes=[".", "/"]) & filters.incoming)
 async def ars(client, message):
-    regi = "`Ejecutando rss, esto puede tardar algunos minutos`"
+    regi = "`Ejecutando rss:`"
     await bot.send_message(log_group, regi)
 
     async def get_feed_entries_ranked(url):
-        entries =[]
+        entries = []
         feed = feedparser.parse(url)
         if feed['feed']['title'] in 'Danbooru: order:rank':
             order_rank = "rank"
@@ -91,21 +84,22 @@ async def ars(client, message):
 
     async def get_recent_entries_async(url, last_checked_time=None):
         entries = await get_feed_entries(url)
-        #print(len(entries))
+        # print(len(entries))
         recent_entries = []
         current_time = time.time()
-        #if last_checked_time is None:
+        # if last_checked_time is None:
         #    last_checked_time = current_time
         for entry_ in entries:
             published_time = parse(entry_["updated"]).timestamp()
             if last_checked_time < published_time <= current_time:
-                #print(f"{last_checked_time} < {published_time} <= {current_time}")
+                # print(f"{last_checked_time} < {published_time} <= {current_time}")
                 recent_entries.append(entry_)
         return recent_entries, current_time
 
-
     async def process_rss(url):
-        chats = get_feed_url()
+        await bot.send_message(log_group, f"`RSS: {url}`")
+        _chat_id = None
+        chats = rss
         var = 0
         for x in chats:
             if x[0] != url:
@@ -115,7 +109,7 @@ async def ars(client, message):
                 var = var
                 collection = db[f'{_chat_id}']
                 break
-        if _chat_id == None:
+        if _chat_id is None:
             print("error")
             return
 
@@ -127,40 +121,45 @@ async def ars(client, message):
             entries = []
             entries_temp = await get_feed_entries_ranked(url)
             for x in entries_temp:
-                item = {"title": x['title'], "link": x['link'], "updated": x['updated'], "author": x['author'], "order": x['order_rank']}
+                item = {"title": x['title'], "link": x['link'], "updated": x['updated'], "author": x['author'],
+                        "order": x['order_rank']}
                 exist = collection.find_one({"link": x["link"]})
                 if not exist:
                     collection.insert_one(item)
                     entries.append(x)
-            if len(entries) > 0:
-                #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
-                regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked"
-                await bot.send_message(log_group, regi)
+            # if len(entries) > 0:
+            #    #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked")
+            #    regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)} --- ranked"
+            #    await bot.send_message(log_group, regi)
         else:
-            entries, last_checked_time_g[var] = await get_recent_entries_async(url,last_checked_time_g[var])
-            if len(entries) > 0:
-                #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}")
-                regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}"
-                await bot.send_message(log_group, regi)
+            entries, last_checked_time_g[var] = await get_recent_entries_async(url, last_checked_time_g[var])
+            # if len(entries) > 0:
+            #    #print(f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}")
+            #    regi = f"RSS: {var} URL: {url} --- Nuevas entradas: {len(entries)}"
+            #    await bot.send_message(log_group, regi)
 
         for entry in entries:
-            #print(f"{entry['title']}: {entry['link']}")
-            if 'danbooru' in entry['link']:
-                archive = b.danbooru(entry['link'])
-            elif 'lolibooru' in entry['link']:
-                archive = b.booru(entry['link'], site="lolibooru")
-                archive = archive.replace(" ", "%20")
-            elif 'konachan' in entry['link']:
-                archive = b.konachan(entry['link'])
-                archive = archive.replace(" ", "%20")
-            elif 'yande.re' in entry['link']:
-                archive = b.booru(entry['link'], site='yandere')
-            else:
+            try:
+                # print(f"{entry['title']}: {entry['link']}")
+                if 'danbooru' in entry['link']:
+                    archive = b.danbooru(entry['link'])
+                elif 'lolibooru' in entry['link']:
+                    archive = b.booru(entry['link'], site="lolibooru")
+                    archive = archive.replace(" ", "%20")
+                elif 'konachan' in entry['link']:
+                    archive = b.konachan(entry['link'])
+                    archive = archive.replace(" ", "%20")
+                elif 'yande.re' in entry['link']:
+                    archive = b.booru(entry['link'], site='yandere')
+                else:
+                    continue
+            except Exception as e:
+                logging.error("[KBNIBOT] - Failed: " + f"{str(e)}")
                 continue
 
             response = requests.get(archive)
             if response.status_code == 200:
-                #filename = os.path.basename(archive)
+                # filename = os.path.basename(archive)
                 path_, ext_ = os.path.splitext(archive)
                 now = datetime.now()
                 date_time = now.strftime("%y%m%d_%H%M%S")
@@ -201,7 +200,7 @@ async def ars(client, message):
             else:
                 print("Error al descargar la imagen.")
 
-    rss_urls = get_feed_url()
+    rss_urls = rss
 
     db = Mclient["rss"]
 
