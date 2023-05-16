@@ -1,7 +1,7 @@
 rss = [
     {
         "rss_url": "https://danbooru.donmai.us/posts.atom",
-        "channel": "-1001655727761",
+        "channel": "@danboorufeedd",
         "caption": ""
     },
     {
