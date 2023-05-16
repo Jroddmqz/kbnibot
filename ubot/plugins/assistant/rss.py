@@ -97,7 +97,6 @@ async def ars(client, message):
         return recent_entries, current_time
 
     async def process_rss(url):
-        await bot.send_message(log_group, f"`RSS: {url}`")
         _chat_id = None
         chats = rss
         var = 0
