@@ -101,10 +101,10 @@ async def ars(client, message):
         chats = rss
         var = 0
         for x in chats:
-            if x[0] != url:
+            if x['rss_url'] != url:
                 var += 1
             else:
-                _chat_id = await is_chat(app, x[1])
+                _chat_id = await is_chat(app, x['channel'])
                 var = var
                 collection = db[f'{_chat_id}']
                 break
