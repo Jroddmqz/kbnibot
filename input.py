@@ -2,7 +2,7 @@ rss = [
     {
         "rss_url": "https://danbooru.donmai.us/posts.atom",
         "channel": "@danboorufeedd",
-        "caption": ""
+        "caption": "😈 @danboorufeedd"
     },
     {
         "rss_url": "https://lolibooru.moe/post.atom",
