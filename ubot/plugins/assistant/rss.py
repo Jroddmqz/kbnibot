@@ -90,7 +90,7 @@ async def ars(client, message):
 
     async def process_rss(url):
         _chat_id = None
-        _caption_ = ""
+        #_caption_ = ""
         chats = rss
         var = 0
         for n in chats:
@@ -98,7 +98,7 @@ async def ars(client, message):
                 var += 1
             else:
                 _chat_id = await is_chat(app, n['channel'])
-                _caption_ = str(n['caption'])
+                _caption_ = n['caption']
                 var = var
                 collection = db[f'{_chat_id}']
                 break
@@ -165,9 +165,9 @@ async def ars(client, message):
                 with open(os.path.join(temp, filename), "wb") as f:
                     f.write(response.content)
                 file_path = f"{temp}{filename}"
-                capy = f"{entry['title']}\n{_caption_}"
+                capy = f"{entry['title']}"#\n{_caption_}"
 
-                await upload_file(bot, file_path, _chat_id, capy, ext_)
+                await upload_file(bot, file_path, _chat_id, capy, ext_, x_item=False)
             else:
                 print("Error al descargar la imagen.")
 
